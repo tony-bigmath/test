@@ -1,3 +1,4 @@
+
 # BMDB Code编码规范建议
 
 ## 名字
@@ -100,7 +101,7 @@ std下的类型很多都是小写，这样挺好，可以很直接区分标准�
 * 第二类，本文件依赖的第三方库，可<>，也可“”，根据此库的流行度或习惯
 * 第三类，本文件自己需要的头文件，必须用""
 
-至于各类的前后，均可。为了下面的自我依赖证明，有时，可能将第三类放到前面
+至于各类的前后，均可。为了下面的"头文件必须单独依赖"，有时，可能将第三类放到前面
 
 ```cpp
 #include <string>
@@ -115,15 +116,12 @@ std下的类型很多都是小写，这样挺好，可以很直接区分标准�
 下面这个头文件test.h
 ```cpp
 class A {
- public:
-  A(std::string&& n) : name_(std::move(n))
-  {}
-  
-  std::string GetName() const {
-    return name_;
-  }
+public:
+  A(std::string &&n) : name_(std::move(n)) {}
 
- private:
+  std::string GetName() const { return name_; }
+
+private:
   std::string name_;
 };
 ```
@@ -497,7 +495,9 @@ void foo() {
 这样做的好处在于：
 
 1、代码里看不到，或者少看到，new以及delete
+
 2、动态创建对象尽可能统一格式，便于grep代码检索
+
 3、如果有多个new，可能异常时会有内存泄漏，而make_shared可以避免这个可能
 
 ## enum建议改为enum class
@@ -519,6 +519,7 @@ enum class State {
 ```
 
 这有什么好处呢？
+
 首先，所有的enum值都必须强制加上State::，这样就明确了这个enum常量的范围（想想：如果两个enum都定义了kError，一个是State，一个是Result）
 
 第二，这样就是强类型了，比如两个enum，一个State，一个Result，作为参数传入，这时，C++就会强制检测参数类型，类型不对，不予通过。这是我们爱C++的地方。
