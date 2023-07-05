@@ -3,11 +3,11 @@
 ## 目录
 
 * 工具Clang Format：安装和配置
-* C++
-* 其他语言（Java、Python、前端或其他语言）
+* Clang Format: C++
+* Clang Format: 其他语言（Java、Python、前端或其他语言）
 * BMDB Copyright头部自动插入工具
 
-## 工具Clang Format：安装和配置
+## Clang Format：安装和配置
 
 我们采用统一的Clang Format处理我们统一的code style和code format。
 
