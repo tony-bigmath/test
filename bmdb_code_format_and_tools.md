@@ -14,7 +14,7 @@
 ### 安装步骤
 
 ```cpp
-if 你已有最新(或较新)的Visual Studio Code {
+if (你已有最新(或较新)的Visual Studio Code) {
     // Do Nothing，因为VS Code已自带了Clang Format
 } else if (VS Code太老) {
     到Extensions MarketPlace，下载一款Clang Format

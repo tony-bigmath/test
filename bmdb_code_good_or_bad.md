@@ -1,6 +1,12 @@
 
 # BMDB Code编码规范建议
 
+## 总体参考
+
+1、[Google C++ Code Style](https://google.github.io/styleguide/cppguide.html)
+
+2、[C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+
 ## 名字
 
 ### 文件名
@@ -39,7 +45,7 @@ class A {
 
 class和struct定义的类型名，尽可能大写开头。
 
-下面的命名不好
+**下面的命名不好**
 ```cpp
 struct c_biginsights {
   std::string bsqlsh;
@@ -63,7 +69,7 @@ struct c_database {
 };
 ```
 
-建议改为：
+**建议改为**
 ```cpp
 struct CBiginsights {
   std::string bsqlsh;
@@ -113,7 +119,7 @@ std下的类型很多都是小写，这样挺好，可以很直接区分标准�
 
 ### 头文件必须单独依赖
 
-下面这个头文件test.h
+**下面这个头文件test.h (注意：是错误的，随后有证明)**
 ```cpp
 class A {
 public:
@@ -162,7 +168,7 @@ int main() {
 
 ### 特别地，.h文件里用forward class避免太多的include
 
-比如：
+**比如：(坏代码)**
 ```cpp
 #pragma once
 
@@ -211,6 +217,7 @@ class WebServer {
 
 除了main()，其他应该都在某个namespace下，引用时，带上namespace，如
 
+**坏代码**
 ```cpp
 int main(int argc, char const *argv[]) {
 
@@ -218,7 +225,7 @@ int main(int argc, char const *argv[]) {
   config = std::make_shared<Config>("../config.yml");
 ```
 
-应该改为
+**应该改为，好代码**
 ```cpp
 int main(int argc, char const *argv[]) {
 
@@ -229,6 +236,8 @@ int main(int argc, char const *argv[]) {
 ### std命名空间必须明示
 
 下面的代码如果string是std::string的话，是不好的代码
+
+**坏代码**
 ```cpp
 class A {
 
@@ -272,9 +281,9 @@ if (cond) {
 }
 ```
 
-如果单行，可以不用{}，单必须和下面的statement之间有空行
+如果单行，可以不用{}，但必须和下面的statement之间有空行
 
-以下不可以
+**以下不可以 (坏代码)**
 ```cpp
 if (cond)
   a = 1;
@@ -301,7 +310,7 @@ for (int i = 0; i < 10; ++i>) {
 
 if else必须都加{}
 
-下面是错误的
+**下面是错误的 (坏代码)**
 ```cpp
 if (cond)
   return 10;
@@ -309,7 +318,7 @@ else
   return 20;
 ```
 
-应该改为：
+**应该改为： (好代码)**
 ```cpp
 if (cond) {
   return 10;
@@ -322,7 +331,7 @@ if (cond) {
 
 for和while必须加{}
 
-下面两个都是错误的
+**下面两个都是错误的 (坏代码)**
 ```cpp
 for (int i = 0; i < 100; ++i>)
   ++cnt;
@@ -331,7 +340,7 @@ while (cnt < 100)
   sum += 10;
 ```
 
-应该改为
+**应该改为 (好代码)**
 ```cpp
 for (int i = 0; i < 100; ++i>) {
   ++cnt;
@@ -346,26 +355,28 @@ while (cnt < 100>) {
 
 一般而言，返回值优先于paramter返回
 
-比如：
+**比如：(坏代码)**
 ```cpp
 // 等待消息
 void wait(T &msg) {
   std::unique_lock<std::mutex> lock(mutex_);
-  while (q_.empty())
+  while (q_.empty()) {
     cv_.wait(lock);
+  }
 
   msg = q_.front();
   q_.pop();
 }
 ```
 
-改为下面这种会更好
+**改为下面这种会更好**
 ```cpp
-// 等待消息
+ // 等待消息
  Msg wait() {
   std::unique_lock<std::mutex> lock(mutex_);
-  while (q_.empty())
+  while (q_.empty()) {
     cv_.wait(lock);
+  }
 
   auto msg = q_.front();
   q_.pop();
@@ -394,26 +405,26 @@ void wait(T &msg) {
 
 如下面的代码并不是最好
 
+**坏代码**
 ```cpp
 char *args[] = {"fluent-bit", "-c", "../fluent-bit/fluent-bit.conf", NULL};
 ```
 
-改为类型明确的nullptr会更好
+**改为类型明确的nullptr会更好**
 ```cpp
 char *args[] = {"fluent-bit", "-c", "../fluent-bit/fluent-bit.conf", nullptr};
 ```
 
 ### size()返回的类型是size_t
 
-下面的代码并不好
-
+**下面的代码并不好**
 ```cpp
 for (int i = 0; i < nums.size(); ++i) {
 
 }
 ```
 
-改为类型一致会更好
+**改为类型一致会更好**
 ```cpp
 for (size_t i = 0; i < nums.size(); ++i) {
 
@@ -439,8 +450,7 @@ for (int i = static_cast<int>(nums.size()); i >= 0; --i) {
 
 switch case，应该将所有可能进行遍历（特别是针对enum），如果被选中的类型很少，则应该加入default，并且assert(false)
 
-如下面的代码是好代码
-
+**如下面的代码是好代码**
 ```cpp
 enum class Fruit {
   kApple = 0,
@@ -475,6 +485,7 @@ int foo(const Fruit &fruit) {
 ## 尽可能用std::make_shared，替代std::shared_ptr s(new XXX)
 
 比如下面的代码
+**不建议的代码**
 ```cpp
 void foo() { 
   std::shared_ptr<std::string> s(new std::string("abc")); 
@@ -483,7 +494,7 @@ void foo() {
 }
 ```
 
-改为下面的会更好
+**改为下面的会更好**
 ```cpp
 void foo() { 
   std::shared_ptr<std::string> s = std::make_shared<std::string>("abc"); 
@@ -498,15 +509,16 @@ void foo() {
 
 2、动态创建对象尽可能统一格式，便于grep代码检索
 
-3、如果有多个new，可能异常时会有内存泄漏，而make_shared可以避免这个可能
+3、如果有多个new在一个statement上，可能异常时会有内存泄漏，而make_shared可以避免这个
 
 ## enum建议改为enum class
 
+**不建议的代码**
 ```cpp
 enum State { Normal, Transaction, Error, Warning, Statement, Prepare };
 ```
 
-建议改为：
+**建议改为更好的代码**
 ```cpp
 enum class State {
   kNormal,
@@ -530,7 +542,7 @@ enum class State {
 
 如果我们的代码不确定，特别是面对外部他人的调用时，应该尽可能怀疑其值的越界或非法可能，比如：
 
-下面的代码有可能不安全
+**下面的代码有可能不安全**
 ```cpp
 else {
   transaction.duration = res[0].duration;
@@ -541,6 +553,8 @@ else {
 这里，res这个container，我们并没有把握它是非空。
 
 或者，我们肯定可以确认这个res是非空的，那我们如下代码会更好，既可能是检查万一的bug，也可能是边界的说明（即明示res这里绝对不可能是空的）
+
+**更严谨或更显式表达作者意图的代码**
 ```cpp
 else {
   assert(!res.empty());
@@ -559,13 +573,13 @@ else {
 
 ## 尽可能不要用C里的implicit type conversion
 
-比如：
+**比如：(不好的代码)**
 ```cpp
 char *p = "abc";
 void *addr = (void *)p;
 ```
 
-改为下面C++的明示类型转换
+**改为下面C++的明示类型转换，是好代码**
 ```cpp
 char *p = "abc";
 void *addr = static_cast<void *>(p);
@@ -577,12 +591,12 @@ C++关于类型转换还有另外两种方式，分别是reintepret_cast<>()和d
 
 即double m原则，这样，内部的方法，才能方便区分const和非const。
 
-即
+**即不好的代码**
 ```cpp
 std::mutex mutex_;
 ```
 
-改为：
+**改为：好代码**
 ```cpp
 mutable std::mutex mutex_;
 ```
