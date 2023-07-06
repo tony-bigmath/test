@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
 2、{}的使用，会被统一，我们采用同行scope
 
-3、指针的定义，也会被统一为 Type *var
+3、指针的定义，也会被统一为 Type *var。注：我们社区代码并不强制，即允许 Type\*
 
 4、Clang Format不解决编码的错误或不当逻辑，比如：foo()中，没有对to_print进行nullptr判断，这个clang format不负责报错或提示，需要code reviewer严格把关
 

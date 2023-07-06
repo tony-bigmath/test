@@ -105,16 +105,19 @@ std下的类型很多都是小写，这样挺好，可以很直接区分标准�
 
 * 第一类，系统头文件，如string，必须用<>
 * 第二类，本文件依赖的第三方库，可<>，也可“”，根据此库的流行度或习惯
-* 第三类，本文件自己需要的头文件，必须用""
+* 第三类，本文件在自己工程里定义和需要的头文件，必须用""
 
 至于各类的前后，均可。为了下面的"头文件必须单独依赖"，有时，可能将第三类放到前面
 
 ```cpp
 #include <string>
+#include <memory>
 
 #include <dep/yamal/yaml.h>
+#include "dep/redis/jedis.h"
 
-#include "my_structure.h"
+#include "my_base.h"
+#include "my_derived.h"
 ```
 
 ### 头文件必须单独依赖
@@ -333,20 +336,18 @@ for和while必须加{}
 
 **下面两个坏代码**
 ```cpp
-for (int i = 0; i < 100; ++i>)
-  ++cnt;
+for (int i = 0; i < 100; ++i) ++cnt;
 
-while (cnt < 100)
-  sum += 10;
+while (cnt < 100) sum += 10;
 ```
 
 **应该改为 (好代码)**
 ```cpp
-for (int i = 0; i < 100; ++i>) {
+for (int i = 0; i < 100; ++i) {
   ++cnt;
 }
 
-while (cnt < 100>) {
+while (cnt < 100) {
   sum += 10;
 }
 ```
@@ -415,6 +416,78 @@ char *args[] = {"fluent-bit", "-c", "../fluent-bit/fluent-bit.conf", NULL};
 char *args[] = {"fluent-bit", "-c", "../fluent-bit/fluent-bit.conf", nullptr};
 ```
 
+### 不允许在一行定义两个类型
+
+**下面几个变量定义都是不允许的**
+```cpp
+int i, *j;    // i is integer, j is pointer to integer
+
+int* i, j;    // i is pointer to integer, j is integer
+```
+
+**即只允许下面的写法**
+```cpp
+int i, j;     // i and j are integer
+
+int *i, *j;   // i and j are pointer to integer
+
+int* i, *j;   // like above, but not recommend
+
+// seperate in two lines for two definitions of different types
+int i;      // i is integer
+int* j;     // j is pointer to integer
+int *j;     // like above
+```
+
+### 对于是与否、成功与失败，请尽可能用bool类型
+
+**下面的写法并不好**
+```cpp
+int res = JudgeSuccess(a, b, &c);
+
+if (res) 
+  printf("We got it!!!\n");
+```
+
+上面的res改为bool，应该更好
+
+### 对于非空指针、非零返回值的判断，尽可能类型明示
+
+**下面的代码并不好**
+```cpp
+bool IsEmptyNode(TreeNode* node) {
+  return node;
+}
+
+bool IsEmptyNode(TreeNode* node) {
+  return node ? true : false;
+}
+
+bool CallFailed(Func io_func, int fd) {
+  const int res = io_func(fd);
+  return !res;
+}
+
+bool CallFailed(Func io_func, int fd) {
+  const int res = io_func(fd);
+  return res ? false : true;
+}
+```
+
+除了bool类型，我们可以直接判断，其他的比较，应该明示
+
+**上面的代码更改为下面的更好**
+```cpp
+bool IsEmptyNode(TreeNode* node) {
+  return node != nullptr;
+}
+
+bool CallFailed(Func io_func, int fd) {
+  const int res = io_func(fd);
+  return res != 0;
+}
+```
+
 ### size()返回的类型是size_t
 
 **下面的代码并不好**
@@ -439,6 +512,24 @@ for (int i = static_cast<int>(nums.size()); i >= 0; --i) {
   
 }
 ```
+
+### 如果可以，literal最好标明类型
+
+**比如下面一个代码是有bug的**
+```cpp
+auto add_eff = [](size_t sum, const Handle* h) {
+  return sum + h->eff;
+};
+const size_t sum = std::accumulate(samples_.begin(), samples_.end(), 0, add_eff);
+```
+
+原因是，0被当作缺省的integer，导致出现overflow
+
+**正确的写法是**
+```cpp
+const size_t sum = std::accumulate(samples_.begin(), samples_.end(), 0ULL, add_eff);
+```
+
 
 ## 最好少用全局变量(含static)，如果用，尽量trivial
 
@@ -562,6 +653,28 @@ else {
   transaction.end_time = res[0].start_time;
 }
 ```
+
+## 没有初始化的变量定义，大部分情况都不可接受
+
+**比如下面的代码并不好**
+```cpp
+bool success;
+
+if (foo() && cnt > 2) {
+  success = true;
+}
+
+return sucess;
+```
+
+**好的写法是，定义时尽可能初始化**
+```cpp
+bool success = false;
+```
+
+对于native type，其定义初始化带来的cost忽略不计。
+
+注意，对于复杂的对象，如class等，其初始化是default ctor完成的，如果存在的话。
 
 ## 复杂类型考虑用auto，简单类型尽可能不用auto
 
