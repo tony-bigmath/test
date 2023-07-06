@@ -15,6 +15,23 @@
 * 上面两个指南中虽然有，但我们需要重点提出的
 * 和指南有冲突的，请以下面我们自己的标准为准
 
+## 目录
+
+[名字](#名字)
+[头文件](#头文件)
+[命名空间namespace](#命名空间namespace)
+[格式](#格式)
+[const](#const)
+[强类型和类型匹配](#强类型和类型匹配)
+[全局变量](#全局变量)
+[switch case](#switch-case)
+[智能指针](#智能指针)
+[enum](#enum)
+[怀疑一切越界或非法](#怀疑一切越界或非法)
+[变量的初始化](#变量的初始化)
+[auto](#auto)
+[double-m](#double-m)
+
 ## 名字
 
 ### 文件名
@@ -105,7 +122,7 @@ std下的类型很多都是小写，这样挺好，可以很直接区分标准�
 
 而且，我们应该尽可能带入std这个命名空间，多敲几个字符是好习惯。
 
-## 头文件include
+## 头文件
 
 ### 头文件分类
 
@@ -309,7 +326,7 @@ if (cond)
 b = 2;
 ```
 
-下面也可以，因为return 10下面是}
+下面也可以，因为return 10下面是括号
 ```cpp
 for (int i = 0; i < 10; ++i>) {
   if (cond)
@@ -496,6 +513,24 @@ bool CallFailed(Func io_func, int fd) {
 }
 ```
 
+### 类型转化需要明示
+
+尽可能不要用C里的implicit type conversion
+
+**比如：(不好的代码)**
+```cpp
+char *p = "abc";
+void *addr = (void *)p;
+```
+
+**改为下面C++的明示类型转换，是好代码**
+```cpp
+char *p = "abc";
+void *addr = static_cast<void *>(p);
+```
+
+C++关于类型转换还有另外两种方式，分别是reintepret_cast<>()和dynamic_cast<>()，它们有很大的区别，应该明示出来，这是C++比C先进的地方。
+
 ### size()返回的类型是size_t
 
 **下面的代码并不好**
@@ -539,13 +574,15 @@ const size_t sum = std::accumulate(samples_.begin(), samples_.end(), 0ULL, add_e
 ```
 
 
-## 最好少用全局变量(含static)，如果用，尽量trivial
+## 全局变量
+
+最好少用全局变量(含static)，如果用，尽量trivial
 
 少用全局变量，即使是static或anonymous namespace。如果要用，让这个全局变量尽量trivially destructible
 
 [请参考Google的定义](https://google.github.io/styleguide/cppguide.html#Static_and_Global_Variables)
 
-## switch case应遍历所有可能
+## switch case
 
 switch case，应该将所有可能进行遍历（特别是针对enum），如果被选中的类型很少，则应该加入default，并且assert(false)
 
@@ -581,7 +618,9 @@ int foo(const Fruit &fruit) {
 
 这个对于if else if和try catch，也同样类似适用（如果不影响正常逻辑的话），如果可能的话，应该尽可能罗列所有可能，并且对不应该发生的意外，进行主动报错 (如assert false)。
 
-## 尽可能用std::make_shared，替代std::shared_ptr s(new XXX)
+## 智能指针
+
+尽可能用std::make_shared，替代std::shared_ptr s(new XXX)
 
 比如下面的代码
 **不建议的代码**
@@ -610,7 +649,9 @@ void foo() {
 
 3、如果有多个new在一个statement上，可能异常时会有内存泄漏，而make_shared可以避免这个
 
-## enum建议改为enum class
+## enum
+
+单纯的enum，建议改为enum class
 
 **不建议的代码**
 ```cpp
@@ -662,7 +703,9 @@ else {
 }
 ```
 
-## 没有初始化的变量定义，大部分情况都不可接受
+## 变量的初始化
+
+没有初始化的变量定义，大部分情况都不可接受
 
 **比如下面的代码并不好**
 ```cpp
@@ -684,7 +727,9 @@ bool success = false;
 
 注意，对于复杂的对象，如class等，其初始化是default ctor完成的，如果存在的话。
 
-## 复杂类型考虑用auto，简单类型尽可能不用auto
+## auto
+
+复杂类型考虑用auto，简单类型尽可能不用auto
 
 对于复杂类型，特别是需要看API才能了解类型的，建议用auto来简化之。
 
@@ -692,23 +737,10 @@ bool success = false;
 
 让阅读者易阅读和理解，是我们代码的目的。
 
-## 尽可能不要用C里的implicit type conversion
 
-**比如：(不好的代码)**
-```cpp
-char *p = "abc";
-void *addr = (void *)p;
-```
+## double-m
 
-**改为下面C++的明示类型转换，是好代码**
-```cpp
-char *p = "abc";
-void *addr = static_cast<void *>(p);
-```
-
-C++关于类型转换还有另外两种方式，分别是reintepret_cast<>()和dynamic_cast<>()，它们有很大的区别，应该明示出来，这是C++比C先进的地方。
-
-## 对于class内部的mutex内部变量，加mutable关键字
+对于class内部的mutex内部变量，加mutable关键字
 
 即double m原则，这样，内部的方法，才能方便区分const和非const。
 
